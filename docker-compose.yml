@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  # CONTAINER 1: FRONTEND (Next.js)
+  frontend:
+    image: node:20-alpine
+    container_name: uniflow-frontend
+    restart: unless-stopped
+    # Placeholder to keep the container alive until Next.js app initialization
+    command: sh -c "echo 'UniFlow Next.js Frontend Initialized' && tail -f /dev/null"
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    networks:
+      - uniflow-network
+
+  # CONTAINER 2: BACKEND (FastAPI)
+  backend:
+    image: python:3.11-slim
+    container_name: uniflow-backend
+    restart: unless-stopped
+    # Placeholder to keep the container alive until FastAPI app initialization
+    command: sh -c "echo 'UniFlow FastAPI Backend Initialized' && tail -f /dev/null"
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://uniflow_admin:uniflow_secure_pass123@database:5432/uniflow_db
+      - ENVIRONMENT=development
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - uniflow-network
+
+  # CONTAINER 3: DATABASE (PostgreSQL Multi-Tenant)
+  database:
+    image: postgres:16-alpine
+    container_name: uniflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: uniflow_admin
+      POSTGRES_PASSWORD: uniflow_secure_pass123
+      POSTGRES_DB: uniflow_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    # Port is not exposed to host for security; accessible inside uniflow-network on port 5432
+    volumes:
+      - uniflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uniflow_admin -d uniflow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - uniflow-network
+
+# Private bridge network for inter-container communication
+networks:
+  uniflow-network:
+    driver: bridge
+
+# Persistent storage volume for PostgreSQL
+volumes:
+  uniflow_db_data:
+    driver: local
