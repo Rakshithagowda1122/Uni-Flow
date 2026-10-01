@@ -43,7 +43,8 @@ services:
       POSTGRES_PASSWORD: uniflow_secure_pass123
       POSTGRES_DB: uniflow_db
       PGDATA: /var/lib/postgresql/data/pgdata
-    # Port is not exposed to host for security; accessible inside uniflow-network on port 5432
+    ports:
+      - "5432:5432"
     volumes:
       - uniflow_db_data:/var/lib/postgresql/data
     healthcheck:
