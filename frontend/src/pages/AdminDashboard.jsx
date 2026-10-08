@@ -1,4 +1,11 @@
+import { apiRequest } from "@/api/client";
+import { useEffect } from "react";
 function AdminDashboard() {
+  useEffect(() => {
+    apiRequest("/admin/attendance")
+      .then((data) => console.log("Admin attendance:", data))
+      .catch((error) => console.error(error));
+  }, []);
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-7xl">

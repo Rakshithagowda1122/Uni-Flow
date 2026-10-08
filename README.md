@@ -32,20 +32,29 @@ Database-backed operations run in a transaction and set
 `app.current_tenant_id` transaction-locally before queries, matching the database
 architecture's RLS context convention.
 
+The database architecture enables RLS on `attendance_records` but does not
+provide a policy for that table in its policy definitions. Apply an approved
+tenant policy before relying on RLS-protected attendance reads or writes; this
+backend does not alter the schema or invent a policy.
+
 ## Implemented API routes
 
 Base path: `/api/v1`.
 
 | Method | Route | Requirement | Database mapping |
 | --- | --- | --- | --- |
-| POST | `/faculty/classes/{class_id}/attendance` | FAC-01 | Checks `classes`, `users`, and `enrollments`; inserts into `attendance_records`. |
+| POST | `/faculty/classes/{class_id}/attendance` | FAC-01 | Checks the assigned `classes` row; inserts into `attendance_records`. |
 | PUT | `/faculty/classes/{class_id}/attendance/{student_id}?session_date={date}` | FAC-01 | Checks `classes`; updates the matching `attendance_records` row. |
 | GET | `/students/me/attendance` | STD-01 | Selects the current student's `attendance_records`. |
 
 The attendance POST accepts one record per request: `student_id`, `status`, and
 optional `session_date`. If omitted, the database's documented `CURRENT_DATE`
 default is used. The attendance status values are `present`, `absent`, `late`,
-and `excused`. A repeated class/student/date insertion returns `409`.
+and `excused`. Extra request fields are rejected. The API specification does not
+define a request schema; this minimal single-record contract is derived from the
+existing `attendance_records` columns and requires confirmation if a different
+submission shape is intended. A repeated class/student/date insertion returns
+`409`.
 
 All other routes in `api_spec.md` are registered with their specified methods and
 paths and respond with `501 Not Implemented` plus the requirement ID and the
@@ -66,8 +75,9 @@ claim to implement the underlying feature.
 - Authentication protocol/principal provisioning is not specified by the API
   document; trusted middleware integration is needed to populate request identity.
 - The API document does not define attendance request/response schemas. The
-  implemented POST uses one database attendance record as its request contract;
-  confirm this contract if clients require batch attendance submission.
+  implemented POST uses one database attendance record as its minimal request
+  contract. Confirm the body shape before client integration; batch attendance
+  submission is not specified.
 
 ## Project layout
 

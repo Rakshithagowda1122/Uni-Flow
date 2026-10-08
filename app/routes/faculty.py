@@ -16,7 +16,6 @@ from app.routes.unavailable import raise_mapping_unavailable
 from app.schemas.attendance import (
     AttendanceCreate,
     AttendanceRead,
-    AttendanceStatus,
     AttendanceUpdate,
 )
 from app.services.attendance import create_attendance, update_attendance
@@ -96,7 +95,7 @@ async def get_faculty_timetable(_principal: FacultyAccess) -> None:
 async def get_class_attendance_average(
     class_id: UUID,
     _principal: FacultyAccess,
-    aggregate: Literal["average"] = Query(default="average"),
+    aggregate: Literal["average"] = Query(...),
 ) -> None:
     del class_id, aggregate
     raise_mapping_unavailable(

@@ -2,18 +2,24 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
 
-from app.dependencies.auth import UserRole, require_role
+from app.dependencies.auth import (
+    AuthenticatedPrincipal,
+    UserRole,
+    require_role,
+)
 from app.routes.unavailable import raise_mapping_unavailable
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
-AdminAccess = Annotated[object, Depends(require_role(UserRole.ADMIN))]
+AdminAccess = Annotated[
+    AuthenticatedPrincipal, Depends(require_role(UserRole.ADMIN))
+]
 
 
 @router.get("/attendance")
 async def get_college_attendance_average(
     _principal: AdminAccess,
-    scope: Literal["college"] = Query(default="college"),
-    aggregate: Literal["average"] = Query(default="average"),
+    scope: Literal["college"] = Query(...),
+    aggregate: Literal["average"] = Query(...),
 ) -> None:
     del scope, aggregate
     raise_mapping_unavailable(

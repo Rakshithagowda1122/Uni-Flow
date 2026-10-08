@@ -1,4 +1,11 @@
+import { apiRequest } from "@/api/client";
+import { useEffect } from "react";
 function FacultyDashboard() {
+  useEffect(() => {
+    apiRequest("/faculty/timetable")
+      .then((data) => console.log("Faculty timetable:", data))
+      .catch((error) => console.error(error));
+  }, []);
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-7xl">

@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
@@ -18,14 +19,25 @@ from app.dependencies.auth import (
 
 
 @lru_cache
-def get_session_factory() -> async_sessionmaker[AsyncSession]:
+def get_engine() -> AsyncEngine:
     settings = get_settings()
     if not settings.database_url.startswith("postgresql+asyncpg://"):
         raise ValueError(
             "DATABASE_URL must use the postgresql+asyncpg:// scheme."
         )
-    engine = create_async_engine(settings.database_url, pool_pre_ping=True)
-    return async_sessionmaker(engine, expire_on_commit=False)
+    return create_async_engine(settings.database_url, pool_pre_ping=True)
+
+
+@lru_cache
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    return async_sessionmaker(get_engine(), expire_on_commit=False)
+
+
+async def dispose_database() -> None:
+    if get_engine.cache_info().currsize:
+        await get_engine().dispose()
+    get_session_factory.cache_clear()
+    get_engine.cache_clear()
 
 
 async def get_tenant_session(

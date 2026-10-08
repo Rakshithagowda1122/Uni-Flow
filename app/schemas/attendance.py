@@ -17,9 +17,13 @@ class AttendanceCreate(BaseModel):
     status: AttendanceStatus
     session_date: date | None = None
 
+    model_config = ConfigDict(extra="forbid")
+
 
 class AttendanceUpdate(BaseModel):
     status: AttendanceStatus
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class AttendanceRead(BaseModel):
